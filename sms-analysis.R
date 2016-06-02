@@ -33,7 +33,6 @@ irancell_messages <- messages[messages$address %in% irancell_numbers$address, ]
 cat("Total number of advertisements: ", nrow(irancell_messages), "\n")
 cat("Percentage of advertisements to total number of messages: ", round((nrow(irancell_messages) / total_sms_count) * 100, digits = 2), " %\n")
 
-# FIXME:: Output to the console
 # Q1. How many messages are received per day from Irancell-related phone numbers
 msg_per_day <- sqldf("select date, count(*) as sms_count from irancell_messages group by date")
 
@@ -41,12 +40,18 @@ msg_per_day <- sqldf("select date, count(*) as sms_count from irancell_messages 
 # Q2. How many messages do we get on average from Irancell-related numbers per day
 avg_msg_per_day <- round(mean(msg_per_day$sms_count), digits = 3)
 std_msg_per_day <- round(sd(msg_per_day$sms_count), digits = 3)
+cat("On average we receive",avg_msg_per_day, "spam messgaes per day with a SD of", std_msg_per_day, "messages\n")
 
+# FIXME:: Output to the console
 # Q3. What are quntiles?
 qs <- quantile(msg_per_day$sms_count, probs = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))
 
+# FIXME:: Make the chart pretty...
 # Q3. How the chart looks like?
 plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n")
 lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
 
-# Q4. Which number sends the most spam? (Show in a bubble chart)
+# Q4. Which address sends the most spam? (Show in a bubble chart)
+msg_per_number <- sqldf("select address, count(*) as msg_count from irancell_messages group by address")
+msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
+
