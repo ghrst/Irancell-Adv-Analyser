@@ -65,8 +65,8 @@ bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$
 text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90)
 title(main = "Number of spam messages sent by each spam number", xlab = "Address", ylab = "# of messages")
 
-# Q5. Which words are most frequentely used in advertisements of each number
-# Stop words are obtained from http://www.ranks.nl/stopwords/persian
+# Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
+# Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
 persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
                              sep = ",", header = FALSE)
 # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
