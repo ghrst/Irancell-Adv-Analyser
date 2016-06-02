@@ -2,6 +2,9 @@
 library(XML)
 library(lubridate)
 library(sqldf)
+library(tm)
+library(SnowballC)
+library(wordcloud)
 
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
@@ -31,20 +34,21 @@ irancell_numbers <- as.data.frame(t(irancell_numbers), stringsAsFactors = FALSE)
 irancell_messages <- messages[messages$address %in% irancell_numbers$address, ]
 
 cat("Total number of advertisements: ", nrow(irancell_messages), "\n")
-cat("Percentage of advertisements to total number of messages: ", round((nrow(irancell_messages) / total_sms_count) * 100, digits = 2), " %\n")
+cat("Percentage of advertisements to total number of messages: ", round((nrow(irancell_messages) / total_sms_count) * 100, digits = 2), "%\n")
 
-# Q1. How many messages are received per day from Irancell-related phone numbers
+# Q1. How many messages are received per day from spam-related phone numbers
 msg_per_day <- sqldf("select date, count(*) as sms_count from irancell_messages group by date")
+cat("We have data for", nrow(msg_per_day), "days!\n")
 
-
-# Q2. How many messages do we get on average from Irancell-related numbers per day
+# Q2. How many messages do we get on average from spam-related numbers per day
 avg_msg_per_day <- round(mean(msg_per_day$sms_count), digits = 3)
 std_msg_per_day <- round(sd(msg_per_day$sms_count), digits = 3)
 cat("On average we receive",avg_msg_per_day, "spam messgaes per day with a SD of", std_msg_per_day, "messages\n")
 
-# FIXME:: Output to the console
-# Q3. What are quntiles?
+
+# Q3. What are min, max, etc...
 qs <- quantile(msg_per_day$sms_count, probs = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))
+print(summary(msg_per_day$sms_count))
 
 # FIXME:: Make the chart pretty...
 # Q3. How the chart looks like?
@@ -60,5 +64,18 @@ bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$
               col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)))
 text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90)
 title(main = "Number of spam messages sent by each spam number", xlab = "Address", ylab = "# of messages")
+
+# Q5. Which words are most frequentely used in advertisements of each number
+# Stop words are obtained from http://www.ranks.nl/stopwords/persian
+persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
+                             sep = ",", header = FALSE)
+# Notice that we can not stem the document in here! R does not provide such a functionality for Persian
+persian_stopwords <- as.character(persian_stopwords)
+adv_corpus <- Corpus(VectorSource(irancell_messages$body))
+adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
+adv_corpus <- tm_map(adv_corpus, removePunctuation)
+adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
+adv_corpus <- tm_map(adv_corpus, removeNumbers)
+wordcloud(adv_corpus, max.words = 20, random.order = FALSE, colors = rainbow(20))
 
 
