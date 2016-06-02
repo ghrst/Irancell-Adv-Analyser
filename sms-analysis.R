@@ -76,6 +76,6 @@ adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
 adv_corpus <- tm_map(adv_corpus, removePunctuation)
 adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
 adv_corpus <- tm_map(adv_corpus, removeNumbers)
-wordcloud(adv_corpus, max.words = 20, random.order = FALSE, colors = rainbow(20))
+wordcloud(adv_corpus, max.words = 50, random.order = FALSE, colors = rainbow(50))
 
 
