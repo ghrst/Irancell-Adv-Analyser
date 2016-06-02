@@ -78,4 +78,8 @@ adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
 adv_corpus <- tm_map(adv_corpus, removeNumbers)
 wordcloud(adv_corpus, max.words = 50, random.order = FALSE, colors = rainbow(50))
 
-
+#Freq of each individual word
+dtm <- DocumentTermMatrix(adv_corpus)
+dtm <-as.matrix(dtm)
+freq <- colSums(dtm)
+freq <- sort(freq, decreasing = TRUE)
