@@ -52,9 +52,13 @@ plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n")
 lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
 
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
+# Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
+chart_bound <- c(1:20)
 msg_per_number <- sqldf("select address, count(*) as msg_count from irancell_messages group by address")
 msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
-bp <- barplot(msg_per_number$msg_count[1:20], names.arg = msg_per_number$address[1:20], las=2, 
+bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$address[chart_bound], las=2, 
               col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)))
-text(bp, y=msg_per_number$msg_count[1:20], labels=msg_per_number$msg_count[1:20], cex=1, pos=3, srt=90)
+text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90)
 title(main = "Number of spam messages sent by each spam number", xlab = "Address", ylab = "# of messages")
+
+
