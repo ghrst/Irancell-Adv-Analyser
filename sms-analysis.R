@@ -67,19 +67,32 @@ title(main = "Number of spam messages sent by each spam number", xlab = "Address
 
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
 # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
-persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
-                             sep = ",", header = FALSE)
-# Notice that we can not stem the document in here! R does not provide such a functionality for Persian
-persian_stopwords <- as.character(persian_stopwords)
-adv_corpus <- Corpus(VectorSource(irancell_messages$body))
-adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
-adv_corpus <- tm_map(adv_corpus, removePunctuation)
-adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
-adv_corpus <- tm_map(adv_corpus, removeNumbers)
-wordcloud(adv_corpus, max.words = 50, random.order = FALSE, colors = rainbow(50))
 
-#Freq of each individual word
-dtm <- DocumentTermMatrix(adv_corpus)
-dtm <-as.matrix(dtm)
-freq <- colSums(dtm)
-freq <- sort(freq, decreasing = TRUE)
+create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
+  persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
+                               sep = ",", header = FALSE)
+  # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
+  persian_stopwords <- as.character(persian_stopwords)
+  adv_corpus <- Corpus(VectorSource(smses))
+  adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
+  adv_corpus <- tm_map(adv_corpus, removePunctuation)
+  adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
+  adv_corpus <- tm_map(adv_corpus, removeNumbers)
+  wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50))  
+  title(main = title)
+  #Freq of each individual word
+  dtm <- DocumentTermMatrix(adv_corpus)
+  dtm <-as.matrix(dtm)
+  freq <- colSums(dtm)
+  freq <- sort(freq, decreasing = TRUE)
+  return(freq)
+}
+
+# Creating an overall wordcloud. Using the function we can create individual wordclouds for each number
+create_word_cloud_from_smses(irancell_messages$body, "Overall wordcloud")
+# Here I also create wordclouds for the highest spam sending numbers
+for (i in 1:3) {
+  create_word_cloud_from_smses(irancell_messages[irancell_messages$address == msg_per_number$address[i], ]$body,
+                               paste("Wordcloud for ", msg_per_number$address[i]))  
+}
+
