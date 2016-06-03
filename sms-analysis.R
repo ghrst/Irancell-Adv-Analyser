@@ -82,6 +82,8 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
                                sep = ",", header = FALSE)
   # Putting a space instead of : to prevent mixing of words after removing punctuation
   smses <- gsub(":"," ", smses)
+  # Putting a space between numbers and words; otherwise sometimes, after removing numbers, symbols for Tooman will mix-up with prev word
+  smses <- gsub("(\\d+)", " \\1 ", smses)
   # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
   persian_stopwords <- as.character(persian_stopwords)
   adv_corpus <- Corpus(VectorSource(smses))
