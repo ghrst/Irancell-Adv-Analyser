@@ -84,6 +84,9 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   smses <- gsub(":"," ", smses)
   # Putting a space between numbers and words; otherwise sometimes, after removing numbers, symbols for Tooman will mix-up with prev word
   smses <- gsub("(\\d+)", " \\1 ", smses)
+  # There are two different codepoints for persian letter /ye/; one is U+064A (0XD98A) and the other is U+06CC (0XDB8C). We should 
+  # normalize them. Actually there are more codepoints for this letter but fortunately, in our text we only have these two. ;)
+  smses <- gsub("\U064A", "\U06CC", smses)
   # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
   persian_stopwords <- as.character(persian_stopwords)
   adv_corpus <- Corpus(VectorSource(smses))
