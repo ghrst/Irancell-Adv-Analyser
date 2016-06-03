@@ -1,4 +1,13 @@
-# This script analyzes "SMS Backup & Restore" Android app in order to extract Irancell-related text messages
+#################################################################################################################################
+# This script analyzes output of "SMS Backup & Restore" Android app in order to extract and analyse a bunch of numbers in 
+# spam-numbers.xml file. General goal of this script is to analyse spam advertisements of Iranian telecom companies. currently
+# spam-numbers.xml only contains Irancell-related spam numbers.
+# Author: Gholamreza Sabery Tabrizy
+# Email: reza_sabery_89@yahoo.com
+# Blog: http://www.saberynotes.com
+# License: GPL V.2; for more information refer to LICENSE file.
+#################################################################################################################################
+
 library(XML)
 library(lubridate)
 library(sqldf)
