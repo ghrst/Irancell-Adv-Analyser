@@ -80,11 +80,13 @@ title(main = "Number of spam messages sent by each spam number", xlab = "Address
 create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
                                sep = ",", header = FALSE)
+  # Putting a space instead of : to prevent mixing of words after removing punctuation
+  smses <- gsub(":"," ", smses)
   # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
   persian_stopwords <- as.character(persian_stopwords)
   adv_corpus <- Corpus(VectorSource(smses))
   adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
-  adv_corpus <- tm_map(adv_corpus, removePunctuation)
+  adv_corpus <- tm_map(adv_corpus, removePunctuation, preserve_intra_word_dashes = TRUE)
   adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
   adv_corpus <- tm_map(adv_corpus, removeNumbers)
   wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50))  
