@@ -45,7 +45,7 @@ spam_messages <- messages[messages$address %in% spam_numbers$address, ]
 cat("Total number of advertisements: ", nrow(spam_messages), "\n")
 cat("Percentage of advertisements to total number of messages: ", round((nrow(spam_messages) / total_sms_count) * 100, digits = 2), "%\n")
 
-# Q1. How many messages are received per day from spam-related phone numbers
+# Q1. How many days of data do we have?
 msg_per_day <- sqldf("select date, count(*) as sms_count from spam_messages group by date")
 cat("We have data for", nrow(msg_per_day), "days!\n")
 
@@ -109,6 +109,6 @@ create_word_cloud_from_smses(spam_messages$body, "Overall wordcloud")
 # Here I also create wordclouds for the highest spam sending numbers
 for (i in 1:3) {
   create_word_cloud_from_smses(spam_messages[spam_messages$address == msg_per_number$address[i], ]$body,
-                               paste("Wordcloud for ", msg_per_number$address[i]))  
+                               paste("Wordcloud for address: ", msg_per_number$address[i]))  
 }
 
