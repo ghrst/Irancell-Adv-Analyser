@@ -33,20 +33,20 @@ messages$readable_date <- as.POSIXct(messages$readable_date)
 messages$date <- format(messages$readable_date, format = "%Y-%m-%d")
 messages$hour <- format(messages$readable_date, format = "%H")
 
-# Collection of Irancell Numbers. Are there more numbers?
-irancell_numbers <- xmlParse("./spam-numbers.xml", encoding = "utf-8")
-irancell_numbers <- xpathSApply(doc = xmlRoot(irancell_numbers), path = "//number", fun = xmlAttrs)
-irancell_numbers <- as.data.frame(t(irancell_numbers), stringsAsFactors = FALSE)
+# Collection of Spam Numbers. Are there more numbers?
+spam_numbers <- xmlParse("./spam-numbers.xml", encoding = "utf-8")
+spam_numbers <- xpathSApply(doc = xmlRoot(spam_numbers), path = "//number", fun = xmlAttrs)
+spam_numbers <- as.data.frame(t(spam_numbers), stringsAsFactors = FALSE)
                       
 
-# Messages from Irancell
-irancell_messages <- messages[messages$address %in% irancell_numbers$address, ]
+# Messages from spam numbers
+spam_messages <- messages[messages$address %in% spam_numbers$address, ]
 
-cat("Total number of advertisements: ", nrow(irancell_messages), "\n")
-cat("Percentage of advertisements to total number of messages: ", round((nrow(irancell_messages) / total_sms_count) * 100, digits = 2), "%\n")
+cat("Total number of advertisements: ", nrow(spam_messages), "\n")
+cat("Percentage of advertisements to total number of messages: ", round((nrow(spam_messages) / total_sms_count) * 100, digits = 2), "%\n")
 
 # Q1. How many messages are received per day from spam-related phone numbers
-msg_per_day <- sqldf("select date, count(*) as sms_count from irancell_messages group by date")
+msg_per_day <- sqldf("select date, count(*) as sms_count from spam_messages group by date")
 cat("We have data for", nrow(msg_per_day), "days!\n")
 
 # Q2. How many messages do we get on average from spam-related numbers per day
@@ -67,7 +67,7 @@ lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
-msg_per_number <- sqldf("select address, count(*) as msg_count from irancell_messages group by address")
+msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
 msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
 bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$address[chart_bound], las=2, 
               col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)))
@@ -100,10 +100,10 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
 }
 
 # Creating an overall wordcloud. Using the function we can create individual wordclouds for each number
-create_word_cloud_from_smses(irancell_messages$body, "Overall wordcloud")
+create_word_cloud_from_smses(spam_messages$body, "Overall wordcloud")
 # Here I also create wordclouds for the highest spam sending numbers
 for (i in 1:3) {
-  create_word_cloud_from_smses(irancell_messages[irancell_messages$address == msg_per_number$address[i], ]$body,
+  create_word_cloud_from_smses(spam_messages[spam_messages$address == msg_per_number$address[i], ]$body,
                                paste("Wordcloud for ", msg_per_number$address[i]))  
 }
 
