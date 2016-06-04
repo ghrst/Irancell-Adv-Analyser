@@ -14,6 +14,10 @@ library(sqldf)
 library(tm)
 library(SnowballC)
 library(wordcloud)
+library(showtext) # For Fonts
+
+# Adding the font that we use in charts with showtext library
+font.add(family = "BYagut", regular = "./fonts/BYAGUT.TTF")
 
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
@@ -59,21 +63,27 @@ cat("On average we receive",avg_msg_per_day, "spam messgaes per day with a SD of
 qs <- quantile(msg_per_day$sms_count, probs = c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0))
 print(summary(msg_per_day$sms_count))
 
-# FIXME:: Make the chart pretty...
+
 # Q3. How the chart looks like?
-plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n")
+dev.new() # showtext.begin needs this; otherwise it will complain about lack of graphical device!
+showtext.begin()
+plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n",xlab = "", ylab = "", family = "BYagut")
 lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
+title(main = "تعداد پیام های تبلیغاتی ارسال شده", xlab = "ماه", ylab = "تعداد پیام ها", sub = "http://www.saberynotes.com", family = "BYagut")
+showtext.end()
 
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
 msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
 msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
+showtext.begin()
 bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$address[chart_bound], las=2, 
-              col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)))
-text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90)
-title(main = "Number of spam messages sent by each spam number", xlab = "Address", ylab = "# of messages")
-
+              col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)), family="BYagut")
+text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90, family="BYagut")
+title(main = "تعداد پیام های تبلیغاتی ارسال شده از هر آدرس", xlab = "آدرس", ylab = "تعداد پیام ها", 
+      sub = "http://www.saberynotes.com", family = "BYagut")
+showtext.end()
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
 # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
 
@@ -94,8 +104,10 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   adv_corpus <- tm_map(adv_corpus, removePunctuation, preserve_intra_word_dashes = TRUE)
   adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
   adv_corpus <- tm_map(adv_corpus, removeNumbers)
-  wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50))  
-  title(main = title)
+  showtext.begin()
+  wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50), family="BYagut")  
+  title(main = title, sub = "http://www.saberynotes.com", family="BYagut")
+  showtext.end()
   #Freq of each individual word
   dtm <- DocumentTermMatrix(adv_corpus)
   dtm <-as.matrix(dtm)
@@ -105,10 +117,10 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
 }
 
 # Creating an overall wordcloud. Using the function we can create individual wordclouds for each number
-create_word_cloud_from_smses(spam_messages$body, "Overall wordcloud")
+create_word_cloud_from_smses(spam_messages$body, "ابر کلمات برای تمامی پیام ها")
 # Here I also create wordclouds for the highest spam sending numbers
 for (i in 1:3) {
   create_word_cloud_from_smses(spam_messages[spam_messages$address == msg_per_number$address[i], ]$body,
-                               paste("Wordcloud for address: ", msg_per_number$address[i]))  
+                               paste("ابر کلمات برای آدرس: ", msg_per_number$address[i]))  
 }
 
