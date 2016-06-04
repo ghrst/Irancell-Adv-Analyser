@@ -85,9 +85,9 @@ title(main = "تعداد پیام های تبلیغاتی ارسال شده از
       sub = "http://www.saberynotes.com", family = "BYagut")
 showtext.end()
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
-# Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
 
 create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
+  # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
   persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
                                sep = ",", header = FALSE)
   # Putting a space instead of : to prevent mixing of words after removing punctuation
