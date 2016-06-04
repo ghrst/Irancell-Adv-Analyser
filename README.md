@@ -12,6 +12,16 @@ install.packages("lib-name")
 *Caution* : Installation of some libraries may need extra effort.
 
 
+Files
+=====
+
+**spam-numbers.xml**: This XML file currently contains a collection of Irancell-related spam addresses that I gathered. If you know more numbers you can add them here. Also you can include spam numbers of other providers and specify them using the provider attribute.
+
+**persian-stopwords**: Contains a comma-separated list of stopwords that will be automatically removed before creating wordclouds. If you want any word to be removed add it in this file. The list is a modified version of http://www.ranks.nl/stopwords/persian list.
+
+**fonts**: TTF files of fonts used in charts are here. Currently only BYagut.ttf.
+
+
 Authors
 ======
 
