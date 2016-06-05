@@ -18,6 +18,7 @@ library(showtext) # For Fonts
 
 # Adding the font that we use in charts with showtext library
 font.add(family = "BYagut", regular = "./fonts/BYAGUT.TTF")
+showtext.auto()
 
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
@@ -65,27 +66,23 @@ print(summary(msg_per_day$sms_count))
 
 
 # Q3. How the chart looks like?
-dev.new() # showtext.begin needs this; otherwise it will complain about lack of graphical device!
-showtext.begin()
 plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n",xlab = "", ylab = "", family = "BYagut")
 lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
 title(main = "تعداد پیام های تبلیغاتی ارسال شده", xlab = "ماه", ylab = "تعداد پیام ها", sub = "http://www.saberynotes.com", family = "BYagut")
-showtext.end()
+
 
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
 msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
 msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
-showtext.begin()
 bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$address[chart_bound], las=2, 
               col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)), family="BYagut")
 text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90, family="BYagut")
 title(main = "تعداد پیام های تبلیغاتی ارسال شده از هر آدرس", xlab = "آدرس", ylab = "تعداد پیام ها", 
       sub = "http://www.saberynotes.com", family = "BYagut")
-showtext.end()
-# Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
 
+# Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
 create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
   persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
@@ -104,10 +101,8 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   adv_corpus <- tm_map(adv_corpus, removePunctuation, preserve_intra_word_dashes = TRUE)
   adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
   adv_corpus <- tm_map(adv_corpus, removeNumbers)
-  showtext.begin()
   wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50), family="BYagut")  
   title(main = title, sub = "http://www.saberynotes.com", family="BYagut")
-  showtext.end()
   #Freq of each individual word
   dtm <- DocumentTermMatrix(adv_corpus)
   dtm <-as.matrix(dtm)
