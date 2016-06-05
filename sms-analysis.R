@@ -17,7 +17,7 @@ library(wordcloud)
 library(showtext) # For Fonts
 
 # Adding the font that we use in charts with showtext library
-font.add(family = "BYagut", regular = "./fonts/BYAGUT.TTF")
+font.add(family = "BYagut", regular = "fonts/BYAGUT.TTF")
 showtext.auto()
 
 sms_data_file_name <- file.choose()
