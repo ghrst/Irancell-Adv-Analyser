@@ -5,6 +5,7 @@ SMS-Adv-Analyser is an open source (GPL V.2) project which provides you with a s
 ## Usage
 
 In order to use this project you should use **sms-analysis.R** script. This script uses **two** XML files:
+
 **1-** The first XML files should contain list of your SMS messages. This file have to be obtained using **SMS Backup & Restore** Android app (com.riteshsahu.SMSBackupRestore). You can download and install it using Google-play. The most important thing in using this app for creating backup of your messages is choice of *Readable Date Format* option. Your date format should match our parsing format **%d %b %Y %H:%M:%S**. 
 
 **2-**The second XML file contains list of spam numbers. I tried to gather the list of spam numbers for Irancell (an Iranian telecom company). You can provide your own list, add new numbers to this file or use a completely new list. The format is easy to read and write. 
