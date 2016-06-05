@@ -32,13 +32,31 @@ I tested my script under the following conditions:
 
 R version: 3.2.4 - Linux Mint 17.2 (64-bit)
 
-locale: 
+**locale**: 
 
-LC_CTYPE=en_US.UTF-8    LC_NUMERIC=C            LC_TIME=en_US.UTF-8     LC_COLLATE=en_US.UTF-8  LC_MONETARY=fa_IR      
+LC_CTYPE=en_US.UTF-8
 
-LC_MESSAGES=en_US.UTF-8 LC_PAPER=fa_IR          LC_NAME=C               LC_ADDRESS=C            LC_TELEPHONE=C         
+LC_NUMERIC=C            
 
-LC_MEASUREMENT=fa_IR    LC_IDENTIFICATION=C   
+LC_TIME=en_US.UTF-8     
+
+LC_COLLATE=en_US.UTF-8  
+
+LC_MONETARY=fa_IR      
+
+LC_MESSAGES=en_US.UTF-8 
+
+LC_PAPER=fa_IR          
+
+LC_NAME=C               
+
+LC_ADDRESS=C            
+
+LC_TELEPHONE=C         
+
+LC_MEASUREMENT=fa_IR    
+
+LC_IDENTIFICATION=C   
 
 ## Authors
 
