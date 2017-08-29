@@ -14,11 +14,7 @@ library(sqldf)
 library(tm)
 library(SnowballC)
 library(wordcloud)
-library(showtext) # For Fonts
-
-# Adding the font that we use in charts with showtext library
-font.add(family = "BYagut", regular = "fonts/BYAGUT.TTF")
-showtext.auto()
+library(ggplot2)
 
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
@@ -66,21 +62,32 @@ print(summary(msg_per_day$sms_count))
 
 
 # Q3. How the chart looks like?
-plot(as.Date(msg_per_day$date), msg_per_day$sms_count, type="n",xlab = "", ylab = "", family = "BYagut")
-lines(as.Date(msg_per_day$date), msg_per_day$sms_count, type = "l")
-title(main = "تعداد پیام های تبلیغاتی ارسال شده", xlab = "ماه", ylab = "تعداد پیام ها", sub = "http://www.saberynotes.com", family = "BYagut")
+main_title <- "تعداد پیام های تبلیغاتی ارسال شده"
+x_label <- "ماه"
+y_label <- "تعداد پیام های ارسالی"
+subtitle <- "http://www.saberynotes.com"
+y_axis_text <- seq(from = 1, to = max(msg_per_day$sms_count), by = 1)
+
+print(ggplot(data = msg_per_day) + geom_line(mapping = aes(x=as.Date(date), y=sms_count), color="blue") + 
+  scale_y_discrete(limits = y_axis_text) +
+  labs(title=main_title, x=x_label, y=y_label, caption=subtitle) + 
+  theme(text = element_text(family = "BYagut"),plot.title = element_text(hjust = 0.5), plot.caption  = element_text(hjust = 0.5)))
 
 
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
 msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
-msg_per_number <- msg_per_number[order(msg_per_number$msg_count, decreasing = TRUE), ]
-bp <- barplot(msg_per_number$msg_count[chart_bound], names.arg = msg_per_number$address[chart_bound], las=2, 
-              col = rainbow(20), ylim = c(0, sum(msg_per_number$msg_count)), family="BYagut")
-text(bp, y=msg_per_number$msg_count[chart_bound], labels=msg_per_number$msg_count[chart_bound], cex=1, pos=3, srt=90, family="BYagut")
-title(main = "تعداد پیام های تبلیغاتی ارسال شده از هر آدرس", xlab = "آدرس", ylab = "تعداد پیام ها", 
-      sub = "http://www.saberynotes.com", family = "BYagut")
+main_title <- "تعداد پیام های تبلیغاتی ارسال شده از هر آدرس"
+x_label <- "آدرس"
+y_label <- "تعداد پیام ها"
+
+print(ggplot(data = msg_per_number[chart_bound,]) + 
+  geom_col(mapping = aes(x=reorder(address, -msg_count), y=msg_count), fill = rainbow(20)) +
+  labs(title = main_title, x = x_label, y = y_label, caption = subtitle) + 
+  theme(text = element_text(family = "BYagut"), plot.title = element_text(hjust = 0.5), plot.caption  = element_text(hjust = 0.5),
+        axis.text.x  = element_text(angle = 90)))
+
 
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
 create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
