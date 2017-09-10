@@ -16,6 +16,9 @@ library(SnowballC)
 library(wordcloud)
 library(ggplot2)
 
+# Including graph-related customizable items
+source("graph-titles.R")
+
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
 root_node <- xmlRoot(sms_data_xml)
@@ -62,15 +65,12 @@ print(summary(msg_per_day$sms_count))
 
 
 # Q3. How the chart looks like?
-main_title <- "تعداد پیام های تبلیغاتی ارسال شده"
-x_label <- "ماه"
-y_label <- "تعداد پیام های ارسالی"
-subtitle <- "http://www.saberynotes.com"
+g1_text <- get_graph_text("g1")
 y_axis_text <- seq(from = 1, to = max(msg_per_day$sms_count), by = 1)
 
 print(ggplot(data = msg_per_day) + geom_line(mapping = aes(x=as.Date(date), y=sms_count), color="blue") + 
   scale_y_discrete(limits = y_axis_text) +
-  labs(title=main_title, x=x_label, y=y_label, caption=subtitle) + 
+  labs(title=g1_text["main_title"], x=g1_text["x_label"], y=g1_text["y_label"], caption=g1_text["subtitle"]) + 
   theme(text = element_text(family = "BYagut"),plot.title = element_text(hjust = 0.5), plot.caption  = element_text(hjust = 0.5)))
 
 
@@ -78,19 +78,17 @@ print(ggplot(data = msg_per_day) + geom_line(mapping = aes(x=as.Date(date), y=sm
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
 msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
-main_title <- "تعداد پیام های تبلیغاتی ارسال شده از هر آدرس"
-x_label <- "آدرس"
-y_label <- "تعداد پیام ها"
+g2_text <- get_graph_text("g2")
 
 print(ggplot(data = msg_per_number[chart_bound,]) + 
   geom_col(mapping = aes(x=reorder(address, -msg_count), y=msg_count), fill = rainbow(20)) +
-  labs(title = main_title, x = x_label, y = y_label, caption = subtitle) + 
+  labs(title=g2_text["main_title"], x=g2_text["x_label"], y=g2_text["y_label"], caption=g2_text["subtitle"]) + 
   theme(text = element_text(family = "BYagut"), plot.title = element_text(hjust = 0.5), plot.caption  = element_text(hjust = 0.5),
         axis.text.x  = element_text(angle = 90)))
 
 
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
-create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
+create_word_cloud_from_smses <- function(smses, title = "", subtitle="", max_words = 50) {
   # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
   persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
                                sep = ",", header = FALSE)
@@ -109,7 +107,7 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
   adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
   adv_corpus <- tm_map(adv_corpus, removeNumbers)
   wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50), family="BYagut")  
-  title(main = title, sub = "http://www.saberynotes.com", family="BYagut")
+  title(main = title, sub = subtitle, family="BYagut")
   #Freq of each individual word
   dtm <- DocumentTermMatrix(adv_corpus)
   dtm <-as.matrix(dtm)
@@ -119,10 +117,12 @@ create_word_cloud_from_smses <- function(smses, title = "", max_words = 50) {
 }
 
 # Creating an overall wordcloud. Using the function we can create individual wordclouds for each number
-create_word_cloud_from_smses(spam_messages$body, "ابر کلمات برای تمامی پیام ها")
+g3_text <- get_graph_text("g3")
+create_word_cloud_from_smses(spam_messages$body, title = g3_text["main_title"], subtitle = g3_text["subtitle"])
 # Here I also create wordclouds for the highest spam sending numbers
+g4_text <- get_graph_text("g4")
 for (i in 1:3) {
   create_word_cloud_from_smses(spam_messages[spam_messages$address == msg_per_number$address[i], ]$body,
-                               paste("ابر کلمات برای آدرس: ", msg_per_number$address[i]))  
+                               title = paste(g4_text["main_title"], msg_per_number$address[i]), subtitle = g4_text["subtitle"])  
 }
 
