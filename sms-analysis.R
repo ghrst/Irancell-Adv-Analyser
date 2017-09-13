@@ -10,11 +10,11 @@
 
 library(XML)
 library(lubridate)
-library(sqldf)
 library(tm)
 library(SnowballC)
 library(wordcloud)
 library(ggplot2)
+library(dplyr)
 
 # Including graph-related customizable items
 source("graph-titles.R")
@@ -28,19 +28,20 @@ total_sms_count <- xmlSize(root_node)
 cat("Total number of SMS messages in the file: ",total_sms_count, "\n")
 
 # Extracting SMSes and converting them into a data frame. God bless you XPath!
-messages <- xpathSApply(doc = root_node, path = "/smses/sms", fun = xmlAttrs)
-messages <- as.data.frame(t(messages), stringsAsFactors = FALSE)
+messages <- xpathSApply(doc = root_node, path = "/smses/sms", fun = xmlAttrs) %>% 
+  t() %>%
+  as.data.frame(stringsAsFactors = FALSE)
 
-# Converting fields
-messages$readable_date <- strptime(x = messages$readable_date, format = "%d %b %Y %H:%M:%S", tz="Asia/Tehran")
-messages$readable_date <- as.POSIXct(messages$readable_date)
-messages$date <- format(messages$readable_date, format = "%Y-%m-%d")
-messages$hour <- format(messages$readable_date, format = "%H")
+messages <- mutate(messages, readable_date=as.POSIXct(readable_date, format = "%d %b %Y %H:%M:%S", tz="Asia/Tehran"),
+                   date=format(readable_date, format = "%Y-%m-%d"),
+                   hour=format(readable_date, format = "%H"))
 
 # Collection of Spam Numbers. Are there more numbers?
-spam_numbers <- xmlParse("./spam-numbers.xml", encoding = "utf-8")
-spam_numbers <- xpathSApply(doc = xmlRoot(spam_numbers), path = "//number", fun = xmlAttrs)
-spam_numbers <- as.data.frame(t(spam_numbers), stringsAsFactors = FALSE)
+spam_numbers <- xmlParse("./spam-numbers.xml", encoding = "utf-8") %>%
+  xmlRoot() %>%
+  xpathSApply(path = "//number", fun = xmlAttrs) %>%
+  t() %>%
+  as.data.frame(stringsAsFactors = FALSE)
                       
 
 # Messages from spam numbers
@@ -50,7 +51,7 @@ cat("Total number of advertisements: ", nrow(spam_messages), "\n")
 cat("Percentage of advertisements to total number of messages: ", round((nrow(spam_messages) / total_sms_count) * 100, digits = 2), "%\n")
 
 # Q1. How many days of data do we have?
-msg_per_day <- sqldf("select date, count(*) as sms_count from spam_messages group by date")
+msg_per_day <- count(spam_messages, date)
 cat("We have data for", nrow(msg_per_day), "days!\n")
 
 # Q2. How many messages do we get on average from spam-related numbers per day
@@ -77,8 +78,11 @@ print(ggplot(data = msg_per_day) + geom_line(mapping = aes(x=as.Date(date), y=sm
 # Q4. Which addresses sends the most spam? (Show in a Pareto-chart)
 # Notice that we only plot first 20 numbers; you can change this by tweaking this variable.
 chart_bound <- c(1:20)
-msg_per_number <- sqldf("select address, count(*) as msg_count from spam_messages group by address")
 g2_text <- get_graph_text("g2")
+
+msg_per_number <- spam_messages %>% 
+  count(address) %>% 
+  rename(msg_count=n)
 
 print(ggplot(data = msg_per_number[chart_bound,]) + 
   geom_col(mapping = aes(x=reorder(address, -msg_count), y=msg_count), fill = rainbow(20)) +
