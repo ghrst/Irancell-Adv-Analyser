@@ -19,6 +19,36 @@ library(dplyr)
 # Including graph-related customizable items
 source("graph-titles.R")
 
+create_word_cloud_from_smses <- function(smses, title = "", subtitle="", max_words = 50) {
+  # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
+  persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
+                               sep = ",", header = FALSE)
+  # Putting a space instead of : to prevent mixing of words after removing punctuation
+  smses <- gsub(":"," ", smses)
+  # Putting a space between numbers and words; otherwise sometimes, after removing numbers, symbols for Tooman will mix-up with prev word
+  smses <- gsub("(\\d+)", " \\1 ", smses)
+  # There are two different codepoints for persian letter /ye/; one is U+064A (0XD98A) and the other is U+06CC (0XDB8C). We should 
+  # normalize them. Actually there are more codepoints for this letter but fortunately, in our text we only have these two. ;)
+  smses <- gsub("\U064A", "\U06CC", smses)
+  # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
+  persian_stopwords <- as.character(persian_stopwords)
+  adv_corpus <- Corpus(VectorSource(smses))
+  adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
+  adv_corpus <- tm_map(adv_corpus, removePunctuation, preserve_intra_word_dashes = TRUE)
+  adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
+  adv_corpus <- tm_map(adv_corpus, removeNumbers)
+  wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50), family="BYagut")  
+  title(main = title, sub = subtitle, family="BYagut")
+  #Freq of each individual word
+  dtm <- DocumentTermMatrix(adv_corpus)
+  dtm <-as.matrix(dtm)
+  freq <- colSums(dtm)
+  freq <- sort(freq, decreasing = TRUE)
+  return(freq)
+}
+
+
+
 sms_data_file_name <- file.choose()
 sms_data_xml <- xmlParse(sms_data_file_name, encoding = "utf-8")
 root_node <- xmlRoot(sms_data_xml)
@@ -51,7 +81,10 @@ cat("Total number of advertisements: ", nrow(spam_messages), "\n")
 cat("Percentage of advertisements to total number of messages: ", round((nrow(spam_messages) / total_sms_count) * 100, digits = 2), "%\n")
 
 # Q1. How many days of data do we have?
-msg_per_day <- count(spam_messages, date)
+msg_per_day <- spam_messages %>%
+  count(date) %>%
+  rename(sms_count=n)
+
 cat("We have data for", nrow(msg_per_day), "days!\n")
 
 # Q2. How many messages do we get on average from spam-related numbers per day
@@ -92,34 +125,6 @@ print(ggplot(data = msg_per_number[chart_bound,]) +
 
 
 # Q5. Which words are most frequentely used in advertisements in general? (we can also create a per number wordcloud)
-create_word_cloud_from_smses <- function(smses, title = "", subtitle="", max_words = 50) {
-  # Stop words are modified version of words obtained from http://www.ranks.nl/stopwords/persian
-  persian_stopwords <-read.csv(file = "./persian-stopwords", stringsAsFactors = FALSE, encoding = "utf-8", 
-                               sep = ",", header = FALSE)
-  # Putting a space instead of : to prevent mixing of words after removing punctuation
-  smses <- gsub(":"," ", smses)
-  # Putting a space between numbers and words; otherwise sometimes, after removing numbers, symbols for Tooman will mix-up with prev word
-  smses <- gsub("(\\d+)", " \\1 ", smses)
-  # There are two different codepoints for persian letter /ye/; one is U+064A (0XD98A) and the other is U+06CC (0XDB8C). We should 
-  # normalize them. Actually there are more codepoints for this letter but fortunately, in our text we only have these two. ;)
-  smses <- gsub("\U064A", "\U06CC", smses)
-  # Notice that we can not stem the document in here! R does not provide such a functionality for Persian
-  persian_stopwords <- as.character(persian_stopwords)
-  adv_corpus <- Corpus(VectorSource(smses))
-  adv_corpus <- tm_map(adv_corpus, PlainTextDocument)
-  adv_corpus <- tm_map(adv_corpus, removePunctuation, preserve_intra_word_dashes = TRUE)
-  adv_corpus <- tm_map(adv_corpus, removeWords, persian_stopwords)
-  adv_corpus <- tm_map(adv_corpus, removeNumbers)
-  wordcloud(adv_corpus, max.words = max_words, random.order = FALSE, colors = rainbow(50), family="BYagut")  
-  title(main = title, sub = subtitle, family="BYagut")
-  #Freq of each individual word
-  dtm <- DocumentTermMatrix(adv_corpus)
-  dtm <-as.matrix(dtm)
-  freq <- colSums(dtm)
-  freq <- sort(freq, decreasing = TRUE)
-  return(freq)
-}
-
 # Creating an overall wordcloud. Using the function we can create individual wordclouds for each number
 g3_text <- get_graph_text("g3")
 create_word_cloud_from_smses(spam_messages$body, title = g3_text["main_title"], subtitle = g3_text["subtitle"])
@@ -129,4 +134,3 @@ for (i in 1:3) {
   create_word_cloud_from_smses(spam_messages[spam_messages$address == msg_per_number$address[i], ]$body,
                                title = paste(g4_text["main_title"], msg_per_number$address[i]), subtitle = g4_text["subtitle"])  
 }
-
